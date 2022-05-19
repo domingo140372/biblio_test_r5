@@ -1,0 +1,68 @@
+Generic single-database configuration.
+
+
+#instalar fastapi
+Para generar la migracion a la base de datos de los modelos a traves de alembic:
+
+0. domingo@user:~/biblio_api$ alembic init alembic
+  Creating directory /home/domingo/biblio_api/alembic ... done
+  Creating directory /home/domingo/biblio_api/alembic/versions ... done
+  Generating /home/domingo/biblio_api/alembic/script.py.mako ... done
+  Generating /home/domingo/biblio_api/alembic/env.py ... done
+  Generating /home/domingo/biblio_api/alembic.ini ... done
+  Generating /home/domingo/biblio_api/alembic/README ... done
+  Please edit configuration/connection/logging settings in '/home/domingo/biblio_api/alembic.ini' before proceeding.
+
+correr alembic y modificar los siguientes archivos
+
+`/alembic/env.py` y `alembic.init`
+
+a.- En el alembic.init modificar la linea de conexion a la base de datos
+    `sqlalchemy.url = postgresql://user:passwd@localhost/test_biblio`
+
+b.- En alembic/env.py agregar:
+    from biblio_api.base import Base
+    target_metadata = Base.metadata
+
+Nota: para efectos de esta API ya esas modificaciones estan hechas.
+
+Para hacer las migraciones con alembic hay que:
+revisar los archivos alembic/envpy, base.py y models.py
+descomente las lineas: 
+
+`#from biblio_api.base import Base`
+`#from biblio_api.models import *`
+`#from biblio_api.database import Base`
+
+respectivamente y corra por consola los siguientes comandos de alembic:
+
+1. domingo@user:~/biblio_api$ alembic upgrade head
+
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> bb80d19f57e4, inicial
+
+2. domingo@user:~/biblio_api$ alembic revision --autogenerate -m"base de datos"
+
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.ddl.postgresql] Detected sequence named 'tbl_categorias_id_seq' as owned by integer column 'tbl_categorias(id)', assuming SERIAL and omitting
+INFO  [alembic.ddl.postgresql] Detected sequence named 'tbl_libros_id_seq' as owned by integer column 'tbl_libros(id)', assuming SERIAL and omitting
+  Generating /home/domingo/biblio_api/alembic/versions/4ff035eafe6f_base_de_datos.py ... done
+
+3. domingo@user:~/biblio_api$ alembic upgrade head
+
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade bb80d19f57e4 -> 4ff035eafe6f, base de datos
+
+esto deberia generar 3 tablas en la base de datos `biblio_test`:
+
+.- alembic_versions
+.- tbl_categorias
+.- tbl_libros
+
+
+para acceder a la API de google books
+se encuentra el archivo: google_api.py
+cambiar la key de las credenciales para adaptarla a su usuario google
