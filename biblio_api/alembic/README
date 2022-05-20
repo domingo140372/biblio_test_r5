@@ -1,7 +1,7 @@
 Generic single-database configuration.
 
 
-#instalar fastapi
+
 Para generar la migracion a la base de datos de los modelos a traves de alembic:
 
 0. domingo@user:~/biblio_api$ alembic init alembic
