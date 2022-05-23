@@ -1,6 +1,7 @@
 """coding=utf-8."""
  
 from sqlalchemy.orm import Session
+from sqlalchemy import text, and_
 import  models as models
 import schemas as schemas
 
@@ -16,6 +17,12 @@ def get_libro_id(db: Session, id_libro: int):
 
 def get_libros_por_titulo(db: Session, titulo: str):
 	return db.query(models.Libros).filter(models.Libros.titulo.like(f'%{titulo}%')).all()
+
+
+def get_consulta(db: Session, consulta:str):
+	xxx = db.execute(consulta).fetchall()
+	print(xxx)
+	return xxx
 
 
 def get_categorias(db: Session,skip: int = 0, limit: int = 100):

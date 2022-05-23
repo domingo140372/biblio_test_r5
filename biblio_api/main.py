@@ -32,12 +32,15 @@ async def get_libros(skip: int = 0, limit: int = 100, db: Session = Depends(get_
     return libros 
 
 
+
+
 @app.get("/libros/titulo/{titulo}")
 async def get_libros_por_titulo(titulo: str, db:Session = Depends(get_db)):
     titulos = crud.get_libros_por_titulo(db, titulo=titulo)
-    
+    parametro_valor = list(configuracion['params'].values())
+    parametro_titulo = parametro_valor[0]
     if not titulos:
-        url = f"{configuracion['api_link']}{configuracion['params']}{titulo}{configuracion['key']}"
+        url = f"{configuracion['api_link']}{parametro_titulo}{titulo}{configuracion['access_key']}"
         titulos_google = req.get(url)
         response = titulos_google.json()
     else:
@@ -45,6 +48,14 @@ async def get_libros_por_titulo(titulo: str, db:Session = Depends(get_db)):
     
     return response
 
+@app.get("/libros/parametros/q=?{parametros}")
+async def get_libros_por_parametros(parametros: str, db:Session = Depends(get_db)):
+    dictionary = dict(subString.split("=") for subString in parametros.split("&")) 
+    consulta = """
+                SELECT * FROM tbl_libros WHERE {parametros};
+                """
+    resultado = crud.get_consulta(db,consulta)
+    return resultado
 
 @app.get("/categorias/", response_model=List[schemas.Categorias])
 async def get_categorias(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -76,7 +87,7 @@ async def insertar_categoria(categoria: schemas.CrearCategoria, db: Session = De
     return db_categoria
 
 
-@app.delete("/libros/{id}")
+@app.delete("/libros/eliminar/{id}")
 async def eliminar_libro(libro_id: int, db: Session = Depends(get_db)):
     libro = crud.get_libro_id(db, libro_id)
     if not libro:
@@ -85,6 +96,10 @@ async def eliminar_libro(libro_id: int, db: Session = Depends(get_db)):
         return crud.eliminar_libro(db, libro_id)
 
 
+
+def crearUrl(link: str, parametros: str, acces_key: str):
+    url =f"{link}{parametros}{acces_key}"
+    return url
 
 '''
 @app.post("/users/", response_model=schemas.User)
