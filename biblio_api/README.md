@@ -30,5 +30,19 @@
           ya con esto deben estar las tablas en la BD.
     volver a ejecutar `uvicorn main:app --reload`
 
-4. abrir un navegador en la url: `localhost:8000/docs` para ver el swager y la documentación de los noodos.
+4. abrir un navegador en la url: `localhost:8000/docs` para ver el swagger y la documentación de los noodos.
+
+# Enlaces de interes
+
+    https://fastapi.tiangolo.com/
+    https://github.com/tiangolo/full-stack-fastapi-postgresql
+    https://www.postgresql.org/
+    https://swagger.io/
+    https://www.json.org/json-es.html
+    https://www.python.org/
+    https://git-scm.com/
+    https://developers.google.com/books/docs/v1/using
+    https://www.linux.org/
+    https://ubuntu.com/
+
     

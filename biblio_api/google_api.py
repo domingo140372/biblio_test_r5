@@ -3,7 +3,12 @@
 
 configuracion = {
 	"api_link":"https://www.googleapis.com/books/v1/volumes?q=",
-	"params":"intitle:",
-	"key":"&key=AIzaSyCe88DWjYOBl_o4rG9y8r9gVczqbnLACJg"
+	"params":{
+		"intitle":"titulo",
+		"inauthor":"autor",
+		"inpublisher":"editor",
+		"subject":"categorias",
+	},
+	"access_key":"&key=AIzaSyCe88DWjYOBl_o4rG9y8r9gVczqbnLACJg"
 }
 

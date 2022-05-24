@@ -1,15 +1,16 @@
 """coding=utf-8."""
  
+
 from typing import List
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
+from database import SessionLocal, engine
+from datetime import datetime as dtm
+from google_api import *
 import crud as crud
 import models as models
+import json 
 import schemas as schemas
-from database import SessionLocal, engine
-from google_api import *
-#from fastapi.responses import HTMLResponse
-#from fastapi.templating import Jinja2Templates
 import requests as req
 
 ###### hasta aqui se escriben los import #######
@@ -26,6 +27,7 @@ def get_db():
     finally:
         db.close()
 
+
 @app.get("/libros/", response_model=List[schemas.Libros])
 async def get_libros(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     libros = crud.get_libros(db, skip=skip, limit=limit)
@@ -35,9 +37,10 @@ async def get_libros(skip: int = 0, limit: int = 100, db: Session = Depends(get_
 @app.get("/libros/titulo/{titulo}")
 async def get_libros_por_titulo(titulo: str, db:Session = Depends(get_db)):
     titulos = crud.get_libros_por_titulo(db, titulo=titulo)
-    
+    parametro_valor = list(configuracion['params'].values())
+    parametro_titulo = parametro_valor[0]
     if not titulos:
-        url = f"{configuracion['api_link']}{configuracion['params']}{titulo}{configuracion['key']}"
+        url = f"{configuracion['api_link']}{parametro_titulo}{titulo}{configuracion['access_key']}"
         titulos_google = req.get(url)
         response = titulos_google.json()
     else:
@@ -45,6 +48,77 @@ async def get_libros_por_titulo(titulo: str, db:Session = Depends(get_db)):
     
     return response
 
+
+@app.get("/libros/parametros/q={parametros}")
+async def get_libros_por_parametros(parametros: str, db:Session = Depends(get_db)):
+    if parametros ==" ":
+        raise HTTPException(status_code=404, detail="no hay parametros para la consulta")
+    else:
+        condicion = crearCondiciones(parametros=parametros)
+
+        consulta = f"""
+                SELECT * FROM tbl_libros WHERE {condicion};
+                """
+        respuesta = crud.get_consulta(db,consulta)
+
+        if not respuesta:
+            url = crearUrl(configuracion['api_link'], parametros, configuracion['access_key'])
+            titulos_google = req.get(url)
+            response_json=titulos_google.json()
+            libro = jsonGoogleInsert(response_json=response_json, db=db)
+            if not libro:
+                response = {"mensaje":"Error al insertar el libro en la Bse de datos", "status":"400"}
+            else:
+                response = libro
+        else:
+            response = respuesta
+    
+    return response
+
+
+def jsonGoogleInsert(response_json, db: Session = Depends(get_db)):
+    item = 0
+    for i in response_json:
+        titulo = response_json['items'][item]['volumeInfo']['title']
+        autor = response_json['items'][item]['volumeInfo']['authors']
+        lista_autores = ", ".join(autor)
+        
+        try:
+            editor = response_json['items'][item]['volumeInfo']['publisher']
+            descripcion = response_json['items'][item]['volumeInfo']['description']
+            subtitulo = response_json['items'][item]['volumeInfo']['description']
+            url_imagen = response_json['items'][item]['volumeInfo']['imageLinks']['thumbnail']
+        
+        except KeyError:
+            editor = "no tiene editor"
+            descripcion = "no tiene descripcion"
+            subtitulo = "no posee subtitulo"
+            url_imagen = "no tiene imagenes asociadas"
+        
+        try:
+            fecha = str(dtm.fromisoformat(response_json['items'][item]['volumeInfo']['publishedDate']))
+            
+        except ValueError as error:
+                fecha = str(dtm.now())
+        
+        libro = {
+                "id_categoria":1,
+                "titulo":titulo,
+                "subtitulo":subtitulo,
+                "autor":lista_autores,
+                "fecha_publicacion": fecha,
+                "editor":editor,
+                "descripcion":descripcion,
+                "disponible":True,
+                "url_imagen":url_imagen,
+            }
+        #libro_json = json.loads(libro)
+        item +=1
+        
+        libro_nuevo = crud.insertar_libro(db=db, libro=libro, tipo=True)
+        
+        return libro_nuevo
+        
 
 @app.get("/categorias/", response_model=List[schemas.Categorias])
 async def get_categorias(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -65,7 +139,7 @@ async def get_libros_categorias(skip: int = 0, limit: int = 100, db: Session = D
 
 
 @app.post("/libro/insertar/", response_model=schemas.CrearLibro)
-async def insertar_libro(libro: schemas.CrearLibro, db: Session = Depends(get_db)):
+async def insertar_libro(libro: schemas.CrearLibro, db: Session = Depends(get_db), tipo=False):
     db_libro = crud.insertar_libro(db=db, libro=libro)
     return db_libro
 
@@ -76,13 +150,64 @@ async def insertar_categoria(categoria: schemas.CrearCategoria, db: Session = De
     return db_categoria
 
 
-@app.delete("/libros/{id}")
+@app.delete("/libros/eliminar/{id}")
 async def eliminar_libro(libro_id: int, db: Session = Depends(get_db)):
     libro = crud.get_libro_id(db, libro_id)
     if not libro:
         raise HTTPException(status_code=404, detail="el libro no existe")
     else:
         return crud.eliminar_libro(db, libro_id)
+
+
+
+def crearUrl(link: str, parametros: str, acces_key: str):
+    cadena = ""
+    posicion = 0
+    if "&" in parametros:
+        lista_parametros = parametros.split("&")
+        for i in lista_parametros:
+            lista_valor = i.split("=")
+            dicc = configuracion['params']
+            for key, value in dicc.items():
+                if lista_valor[0] == value:
+                    cadena = f"{key}:{lista_valor[1]}&"
+            cadena += cadena
+
+    else:
+        lista_valor = parametros.split("=")
+        dicc = configuracion['params']
+        for key, value in dicc.items():
+            if lista_valor[0] == value:
+                cadena = f"{key}:{lista_valor[1]}"
+    
+    url =f"{link}{cadena}{acces_key}"
+    print(url)
+    return url
+
+
+def crearCondiciones(parametros:str):
+    resultado =""
+    posicion = 0
+    if parametros is None:
+        resultado = None
+    else:
+        if "&" in parametros:
+            lista = parametros.split("&")
+            largo = len(lista)
+            for i in lista:
+                condiciones= i.split("=")
+                if posicion == largo-1:
+                    condicion = f"lower({condiciones[0]}) Like(lower('%{condiciones[1]}%')) \n"
+                else:
+                    condicion = f"lower({condiciones[0]}) Like(lower('%{condiciones[1]}%')) AND \n"
+                resultado += condicion
+                posicion +=1
+        else:
+            condiciones= parametros.split("=")
+            condicion = f"lower({condiciones[0]}) Like(lower('%{condiciones[1]}%')) "
+            resultado += condicion
+
+    return resultado
 
 
 
