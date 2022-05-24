@@ -1,11 +1,11 @@
 """coding=utf-8."""
  
+from typing import Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import text, and_
-import  models as models
+from sqlalchemy import text, and_, exc
 import schemas as schemas
+import models as models
 
-import datetime
 
 def get_libros(db: Session,skip: int = 0, limit: int = 100):
 	return db.query(models.Libros).offset(skip).limit(limit).all()
@@ -20,9 +20,8 @@ def get_libros_por_titulo(db: Session, titulo: str):
 
 
 def get_consulta(db: Session, consulta:str):
-	xxx = db.execute(consulta).fetchall()
-	print(xxx)
-	return xxx
+	resultado = db.execute(consulta).fetchall()
+	return resultado
 
 
 def get_categorias(db: Session,skip: int = 0, limit: int = 100):
@@ -40,16 +39,27 @@ def get_libros_categorias(db: Session,skip: int = 0, limit: int = 100):
 
 #inserciones
 
-def insertar_libro(db: Session, libro: schemas.CrearLibro):
-	id_categoria = libro.id_categoria
-	titulo = libro.titulo
-	subtitulo = libro.subtitulo
-	autor = libro.autor
-	fecha_publicacion= libro.fecha_publicacion 
-	editor = libro.editor
-	descripcion = libro.descripcion
-	disponible = libro.disponible
-	url_imagen = libro.url_imagen
+def insertar_libro(db: Session, libro: schemas.CrearLibro, tipo: Optional[bool] = False):
+	if tipo ==False:
+		id_categoria = libro.id_categoria
+		titulo = libro.titulo
+		subtitulo = libro.subtitulo
+		autor = libro.autor
+		fecha_publicacion= libro.fecha_publicacion 
+		editor = libro.editor
+		descripcion = libro.descripcion
+		disponible = libro.disponible
+		url_imagen = libro.url_imagen
+	elif tipo == True:
+		id_categoria = libro["id_categoria"]
+		titulo = libro["titulo"]
+		subtitulo = libro["subtitulo"]
+		autor = libro["autor"]
+		fecha_publicacion= libro["fecha_publicacion"]
+		editor = libro["editor"]
+		descripcion = libro["descripcion"]
+		disponible = libro["disponible"]
+		url_imagen = libro["url_imagen"]
 
 	db_libro = models.Libros(id_categoria=id_categoria, 
 								titulo=titulo,
@@ -60,9 +70,10 @@ def insertar_libro(db: Session, libro: schemas.CrearLibro):
 								descripcion=descripcion,
 								disponible=disponible,
 								url_imagen=url_imagen)
+	
 	db.add(db_libro)
 	db.commit()
-	db.refresh(db_libro)
+	db.refresh(db_libro)	
 	return db_libro
 
 
