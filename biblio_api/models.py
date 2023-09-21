@@ -33,6 +33,19 @@ class Categorias(Base):
 	descripcion = Column(Text())
 	libros = relationship("Libros", back_populates="categorias")
 
+class Usuarios(Base):
+
+	__tablename__ = "tbl_usuarios"
+
+	id = Column(Integer, primary_key=True, index=True)
+	nombre = Column(String)
+	email = Column(String)
+	clave = Column(String)
+	fecha_ingreso = Column(DateTime)
+
+
+
+
 
 
 
