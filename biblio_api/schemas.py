@@ -23,6 +23,21 @@ class OrmBase(BaseModel):
         orm_mode = True
 
 
+
+
+class UsuariosBase(OrmBase):
+	id: int
+
+class Usuarios(UsuariosBase):
+	nombre: str
+	clave: str
+	email: str
+	fecha_ingreso: datetime
+
+	class Config:
+		orm_mode = True
+
+
 class CategoriasBase(OrmBase):
 	id: int
 
