@@ -3,8 +3,8 @@
 from ast import Str
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text
 from sqlalchemy.orm import relationship
-from biblio_api.database import Base
-#from database import Base
+#from biblio_api.database import Base
+from database import Base
 
 
 class Libros(Base):
