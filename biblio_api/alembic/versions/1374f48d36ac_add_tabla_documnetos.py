@@ -1,8 +1,8 @@
-"""creacion de tabla de Usuarios
+"""Add tabla documnetos
 
-Revision ID: 2ecd668c2565
-Revises: 6ca988b5a5f9
-Create Date: 2023-09-21 13:00:01.489343
+Revision ID: 1374f48d36ac
+Revises: 
+Create Date: 2023-10-23 17:48:05.427157
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '2ecd668c2565'
-down_revision = '6ca988b5a5f9'
+revision = '1374f48d36ac'
+down_revision = None
 branch_labels = None
 depends_on = None
 

@@ -1,7 +1,7 @@
 """coding=utf-8."""
  
 from ast import Str
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, BLOB
 from sqlalchemy.orm import relationship
 #from biblio_api.database import Base
 from database import Base
@@ -42,6 +42,17 @@ class Usuarios(Base):
 	email = Column(String)
 	clave = Column(String)
 	fecha_ingreso = Column(DateTime)
+
+"""
+class PruebaDocumento(Base):
+	
+	__tablename__ = "tbl_documentos"
+
+	id = Column(Integer, primary_key=True, index=True)
+	documneto = Column(BLOB)
+"""
+
+
 
 
 
